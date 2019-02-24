@@ -4,16 +4,23 @@
       Game Kata
     </title>
   </head>
-  <body>
+  <body style="max-height: 916px;">
+    <div style="width: 700px; float: right;">
+      <pre>
+  Drag : 그리기
+  Ctrl + Drag : 지우기
+      </pre>
+    </div>
     <canvas style="border: 1px solid black;" width="1000" height="800" class="canvas">
     </canvas>
-    <button>Clear</button>
-    <div style="display: flex;">
-      <div class="col" style="width: 50px; height: 50px; border: 1px solid black;"></div>
-      <div class="col" style="width: 50px; height: 50px; border: 1px solid black;"></div>
-      <div class="col" style="width: 50px; height: 50px; border: 1px solid black;"></div>
-      <div class="col" style="width: 50px; height: 50px; border: 1px solid black;"></div>
+    <div class="color-bar" style="display: flex;">
+      <div class="current-color" style="margin-right: 10px; width:50px; height: 50px; background-color: black;"></div>
     </div>
+    <div class="button-bar" style="margin-top: 10px;">
+      <button>Clear</button>
+      <button>Sync</button>
+    </div>
+
     <script src="{{subPath}}/bundle.js"></script>
   </body>
 </html>
