@@ -1,13 +1,17 @@
-import { fromEvent } from 'rxjs';
+import { fromEvent, interval } from 'rxjs';
 import { webSocket } from 'rxjs/webSocket';
-import { merge, mapTo, switchMap,
-  filter, takeUntil, startWith, map,
+import {
+  merge, mapTo, switchMap,
+  filter, takeWhile, startWith, map,
   bufferCount, distinctUntilChanged,
-  withLatestFrom } from 'rxjs/operators';
+  withLatestFrom
+} from 'rxjs/operators';
 
 import AlCanvas from './al-canvas';
 
-import { host } from './config';
+import { host, colorSet } from './config';
+
+import { toPositionByOffset } from './util';
 
 window.onload = function () {
   let stColor = 'black';
@@ -27,21 +31,25 @@ window.onload = function () {
     return div;
   };
 
-  ['black', 'red', 'green', 'blue']
-    .forEach((color: string) => {
-      const $el = colorRect(color);
-      document.querySelector('.color-bar').appendChild($el); 
-      fromEvent($el, 'click').subscribe(() => {
-        stColor = color;
-        (document.querySelector('.current-color') as HTMLElement).style.backgroundColor = color;
-      })
+  colorSet.forEach((color: string) => {
+    const $el = colorRect(color);
+    document.querySelector('.color-bar').appendChild($el);
+    fromEvent($el, 'click').subscribe(() => {
+      stColor = color;
+      (document.querySelector('.current-color') as HTMLElement).style.backgroundColor = color;
+      canvas.setColor(color);
     })
+  })
 
   const soc = webSocket(host);
   soc.subscribe();
+
   const mouseDown$ = fromEvent($cvs, 'mousedown');
   const mouseUp$ = fromEvent($cvs, 'mouseup');
   const mouseMove$ = fromEvent($cvs, 'mousemove');
+  const mouseOut$ = fromEvent($cvs, 'mouseleave');
+
+  mouseOut$.subscribe(console.log);
 
   const isCtrl = (e: KeyboardEvent) => e.keyCode === 17;
   const ctrlKeyDown$ = fromEvent(window, 'keydown').pipe(filter(isCtrl));
@@ -55,40 +63,56 @@ window.onload = function () {
       distinctUntilChanged(),
     );
 
+
+  const done$ = mouseUp$.pipe(merge(mouseOut$), map(toPositionByOffset));
+
+  mouseMove$
+    .pipe(
+      merge(mouseOut$),
+      map(toPositionByOffset)
+    )
+    .subscribe(({x, y}) => {
+      canvas.cursorMoveTo(x, y);  
+    });
+  
   const draw$ = mouseDown$
     .pipe(
       switchMap((e) => {
         return mouseMove$
           .pipe(
             startWith(e),
-            takeUntil(mouseUp$),
-            map(({ offsetX, offsetY }: MouseEvent): IPosition => ({ x: offsetX, y: offsetY })),
+            map(toPositionByOffset),
+            merge(done$.pipe(map(a => Object.assign({}, a, { done: true })))),
             bufferCount(2, 1),
+            takeWhile(([a, _]) => !(a as any).done),
           );
       }),
-      filter((arr: IPosition[]) => arr.length >= 2),
       withLatestFrom(ctrlPressing$),
     );
 
   const clear$ = fromEvent(document.querySelector('button'), 'click');
 
+  ctrlPressing$
+      .subscribe((eraser) => {
+        if (eraser) {
+          canvas.setCursorType('eraser');
+        } else {
+          canvas.setCursorType('pen');
+        }
+      });
+
   draw$.subscribe(([[e1, e2], isErase]: [IPosition[], boolean]) => {
     if (!isErase) {
       canvas.draw(e1, e2, stColor, stWidth);
       soc.next({
-        type: 'line',
-        data: {
-          pos: [e1, e2],
-          color: stColor,
-        }
+        type: 'draw',
+        data: [e1, e2, stColor, stWidth],
       });
     } else {
       canvas.erase(e1, e2);
       soc.next({
         type: 'erase',
-        data: {
-          pos: [e1, e2],
-        }
+        data: [e1, e2],
       });
     }
   });
@@ -105,15 +129,20 @@ window.onload = function () {
     data: any;
   }
 
+  interval(1000 / 60).subscribe(() => canvas.render());
+
   soc.subscribe((msg: pushedData) => {
-    if (msg.type === 'line') {
-      canvas.draw(msg.data.pos[0], msg.data.pos[1], msg.data.color, stWidth);
-    }
-    if (msg.type === 'clear') {
-      canvas.clear();
-    }
-    if (msg.type === 'erase') {
-      canvas.erase(msg.data.pos[0], msg.data.pos[1]);
+    console.log(msg);
+    switch(msg.type) {
+      case 'draw':
+        canvas.draw(...msg.data as [IPosition, IPosition, string, number]);
+        break;
+      case 'erase':
+        canvas.erase(...msg.data as [IPosition, IPosition, number]);
+        break;
+      case 'clear':
+        canvas.clear();
+        break;
     }
   });
 }
