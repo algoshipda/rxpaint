@@ -4,8 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "watch": "webpack --config webpack.config.js --watch",
-    "start": "node proxy/proxy.js && node server/server.js"
+    "watch": "webpack --config webpack.config.js --watch"
   },
   "dependencies": {
     "@types/lodash": "^4.14.119",
