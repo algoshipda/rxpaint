@@ -84,6 +84,8 @@ export default class AlCanvas {
         this.ctx.clearRect(...this.getCanvasRect());
       }
     }
+
+    this.buffer = [];
     this.img = this.getImageData();
 
     if (this.cursorPosition.x === null) return;
