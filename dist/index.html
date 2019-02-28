@@ -25,7 +25,9 @@
       <button>Clear</button>
       <button>Sync</button>
     </div>
-
-    <script src="{{subPath}}/bundle.js"></script>
+    <script>
+      window.__ws__ = '{{ws}}';
+    </script>
+    <script src="/bundle.js"></script>
   </body>
 </html>

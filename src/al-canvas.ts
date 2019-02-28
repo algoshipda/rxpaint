@@ -12,6 +12,7 @@ export default class AlCanvas {
   private cursorType: 'pen' | 'eraser';
   private currentColor: string;
   private buffer: ITask[];
+  private tick: number;
   constructor($canvas: HTMLCanvasElement) {
     this.$cvs = $canvas;
     this.ctx = $canvas.getContext('2d');
@@ -25,6 +26,7 @@ export default class AlCanvas {
     }
     this.buffer = [];
     this.currentColor = 'black';
+    this.tick = 0;
   }
 
   public getCanvasRect(): [number, number, number, number] {
@@ -71,21 +73,30 @@ export default class AlCanvas {
 
   public render() { 
     this.ctx.putImageData(this.img, 0, 0);
-    for (let task of this.buffer) {
-      if (task.type === 'draw') {
-        const [from, to, color, width] = task.args;
-        this.ctx.strokeStyle = color;
-        this.ctx.lineWidth = width;
-        this.ctx.beginPath();
-        this.ctx.moveTo(from.x, from.y);
-        this.ctx.lineTo(to.x, to.y);
-        this.ctx.stroke();
-      } else if (task.type === 'clear') {
-        this.ctx.clearRect(...this.getCanvasRect());
+    let idx = -1;
+    if (++this.tick % 3 === 0) {
+      this.ctx.beginPath();
+      const len = this.buffer.length;
+      while (++idx < len) {
+        const task = this.buffer[idx];
+        if (task.type === 'draw') {
+          const [from, to, color, width] = task.args;
+          this.ctx.strokeStyle = color;
+          this.ctx.lineWidth = width;
+          this.ctx.moveTo(from.x, from.y);
+          this.ctx.lineTo(to.x, to.y);
+          if (idx === len - 1 || this.buffer[idx + 1].type !== 'draw') {
+            this.ctx.stroke();
+          }
+        } else if (task.type === 'clear') {
+          if (idx === len - 1 || this.buffer[idx + 1].type !== 'clear') {
+            this.ctx.clearRect(...this.getCanvasRect());
+          }
+        }
       }
+      this.buffer = [];
     }
 
-    this.buffer = [];
     this.img = this.getImageData();
 
     if (this.cursorPosition.x === null) return;
@@ -97,7 +108,7 @@ export default class AlCanvas {
       this.ctx.fillStyle = this.currentColor;
       this.ctx.lineWidth = 5
       this.ctx.arc(x, y, r, 0, Math.PI * 2);
-      this.ctx.fill();
+      this.ctx.fill()
     } else {
       this.ctx.strokeStyle = 'black';
       this.ctx.lineWidth = 1

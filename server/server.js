@@ -6,23 +6,32 @@ const path = require('path');
 
 const room = [];
 
+const arg = new Map((process.argv[2] || '')
+  .split('&')
+  .map(s => s.split('=')));
 
-const subPath = '/paint';
+console.log(arg);
+
+const wsip = arg.get('wsip') || 'ws://localhost';
+const port = arg.get('port') || 8080;
+
+const wsUrl = `${wsip}:${port}`;
+
+console.log(wsUrl);
 
 const server = http.createServer((req, res) => {
   console.log(req.url);
-  if (req.url === subPath) {
+  if (req.url === '/') {
     res.setHeader('content-type', 'text/html; charset=utf-8');
-
     const html = fs.readFileSync(path.resolve(__dirname, '../dist/index.html'))
-        .toString()
-        .replace('{{subPath}}', subPath);
+      .toString()
+      .replace('{{ws}}', wsUrl);
     res.write(html);
     res.end();
     return;
   }
 
-  if (req.url === '/paint/bundle.js') {
+  if (req.url === '/bundle.js') {
     res.setHeader('content-type', 'text/javascript; charset=utf-8');
     res.write(fs.readFileSync(path.resolve(__dirname, '../dist/bundle.js')));
     res.end();
@@ -33,8 +42,8 @@ const server = http.createServer((req, res) => {
   res.end();
 });
 
-server.listen(8080, function () {
-  console.log('800000000');
+server.listen(port, function () {
+  console.log(port);
 });
 
 const wsServer = new ws({

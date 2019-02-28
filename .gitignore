@@ -3,3 +3,5 @@ node_modules
 **/*~
 rxjs-paint.zip
 yarn-error.log
+watch-notifier
+proxy

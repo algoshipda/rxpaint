@@ -9,7 +9,7 @@ import {
 
 import AlCanvas from './al-canvas';
 
-import { host, colorSet } from './config';
+import { colorSet } from './config';
 
 import { toPositionByOffset } from './util';
 
@@ -18,6 +18,8 @@ window.onload = function () {
   let stWidth = 5;
   const $cvs: HTMLCanvasElement = document.querySelector('.canvas');
   const canvas = new AlCanvas($cvs);
+  fromEvent(window, 'keydown')
+    .subscribe(console.log);
 
   const colorRect = (color: string) => {
     const div = document.createElement('div');
@@ -41,7 +43,8 @@ window.onload = function () {
     })
   })
 
-  const soc = webSocket(host);
+  console.log((window as any).__ws__);
+  const soc = webSocket((window as any).__ws__);
   soc.subscribe();
 
   const mouseDown$ = fromEvent($cvs, 'mousedown');
