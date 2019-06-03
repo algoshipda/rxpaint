@@ -1,5 +1,8 @@
 import { fromEvent, interval } from 'rxjs';
-import { webSocket } from 'rxjs/webSocket';
+import soc from './socket';
+
+import Chat from './chat';
+
 import {
   merge, mapTo, switchMap,
   filter, takeWhile, startWith, map,
@@ -13,7 +16,12 @@ import { colorSet } from './config';
 
 import { toPositionByOffset } from './util';
 
+function chatService() {
+  Chat(document.querySelector('.rxpaint-splitter-right-area'));
+}
+
 window.onload = function () {
+  chatService();
   let stColor = 'black';
   let stWidth = 5;
   const $cvs: HTMLCanvasElement = document.querySelector('.canvas');
@@ -42,10 +50,6 @@ window.onload = function () {
       canvas.setColor(color);
     })
   })
-
-  console.log((window as any).__ws__);
-  const soc = webSocket((window as any).__ws__);
-  soc.subscribe();
 
   const mouseDown$ = fromEvent($cvs, 'mousedown');
   const mouseUp$ = fromEvent($cvs, 'mouseup');
@@ -127,10 +131,6 @@ window.onload = function () {
     });
   });
 
-  interface pushedData {
-    type: string;
-    data: any;
-  }
 
   interval(1000 / 60).subscribe(() => canvas.render());
 

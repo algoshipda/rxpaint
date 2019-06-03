@@ -1,29 +1,116 @@
 <html>
   <head>
     <title>
-      Game Kata
+      rxpaint
     </title>
     <style>
       canvas:hover {
         cursor: none;
       }
+
+      .rxpaint-splitter {
+        display: flex;
+      }
+
+      .rxpaint-message-log {
+        border: 1px solid black;
+        width: calc(100% - 40px);
+        height: 500px;
+        word-break: break-all;
+        overflow: auto;
+        padding: 10px;
+      }
+
+      .rxpaint-message-box-wrapper {
+        width: 100%;
+        display: flex;
+      }
+
+      .rxpaint-message-box-wrapper-my {
+        width: 100%;
+        justify-content: flex-end;
+      }
+
+      .rxpaint-message-box {
+        max-width: 200px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        padding: 10px;
+      }
+
+      .rxpaint-message-box-nickname {
+        max-width: 200px;
+        background-color: transparent;
+        font-weight: bold;
+        padding-left: 10px;
+      }
+
+      .rxpaint-message-box-nickname.my {
+        text-align: right;
+      }
+
+      .rxpaint-message-box-my {
+        background-color: yellow;
+      }
+
+      .rxpaint-message-box-your {
+        background-color: skyblue;
+      }
+
+      .rxpaint-splitter-left-area {
+        width: 1050px;
+      }
+
+      .rxpaint-splitter-right-area {
+        width: 100%;
+        margin-left: 20px;
+        box-sizing: content-box;
+      }
+
+      .rxpaint-chat-nickname-input {
+        width: 100px;
+      }
+
+      .rxpaint-chat-input {
+        width: calc(100% - 200px);
+      }
+
+      .rxpaint-chat-bar {
+        margin-top: 10px;
+      }
+
+      * { 
+        font-family: 'Nanum Gothic', sans-serif;
+      }
     </style>
+    <link href="https://fonts.googleapis.com/css?family=Nanum+Gothic&display=swap" rel="stylesheet">
   </head>
   <body style="max-height: 916px;">
-    <div style="width: 700px; float: right;">
-      <pre>
-  Drag : 그리기
-  Ctrl + Drag : 지우기
-      </pre>
-    </div>
-    <canvas style="border: 1px solid black;" width="1000" height="800" class="canvas">
-    </canvas>
-    <div class="color-bar" style="display: flex;">
-      <div class="current-color" style="margin-right: 10px; width:50px; height: 50px; background-color: black;"></div>
-    </div>
-    <div class="button-bar" style="margin-top: 10px;">
-      <button>Clear</button>
-      <button>Sync</button>
+    <div class="rxpaint-splitter">
+      <div class="rxpaint-splitter-left-area">
+        <canvas style="border: 1px solid black;" width="1000" height="800" class="canvas">
+        </canvas>
+        <div class="color-bar" style="display: flex;">
+          <div class="current-color" style="margin-right: 10px; width:50px; height: 50px; background-color: black;"></div>
+        </div>
+        <div class="button-bar" style="margin-top: 10px;">
+          <button>Clear</button>
+          <button>Sync</button>
+          <pre>
+            Drag : 그리기
+            Ctrl + Drag : 지우기
+          </pre>
+        </div>
+      </div>
+      <div class="rxpaint-splitter-right-area">
+        <div class="rxpaint-message-log">
+        </div>
+        <div class="rxpaint-chat-bar">
+          <input maxLength="10" placeholder="닉네임" class="rxpaint-chat-nickname-input"/>
+          <input class="rxpaint-chat-input"/>
+          <button class="rxpaint-chat-send-button">Send</button>
+        </div>
+      </div>
     </div>
     <script>
       window.__ws__ = '{{ws}}';
